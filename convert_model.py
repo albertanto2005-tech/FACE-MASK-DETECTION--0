@@ -1,19 +1,49 @@
 import os
+import sys
+import types
+
+# ✅ Fix for tensorflow_decision_forests issue (Windows safe)
+sys.modules['tensorflow_decision_forests'] = types.ModuleType('tensorflow_decision_forests')
+
 import tensorflowjs as tfjs
 from tensorflow.keras.models import load_model
 
-model_path = "mask_detector.h5"
-output_dir = "web_model"
+# ==============================
+# CONFIG
+# ==============================
+MODEL_PATH = "mask_detector.h5"
+OUTPUT_DIR = "web_model"
 
-if not os.path.exists(model_path):
-    print(f"[ERROR] Could not find {model_path}. Make sure to train the model first by running train.py")
+# ==============================
+# CHECK MODEL
+# ==============================
+if not os.path.exists(MODEL_PATH):
+    print(f"[ERROR] Model not found: {MODEL_PATH}")
+    print("👉 Make sure 'mask_detector.h5' is in this folder")
     exit(1)
 
+# ==============================
+# LOAD MODEL
+# ==============================
 print("[INFO] Loading trained Keras model...")
-model = load_model(model_path)
+model = load_model(MODEL_PATH, compile=False)
 
-print(f"[INFO] Converting model to TensorFlow.js format (Float16 Quantized) in '{output_dir}'...")
-# Float16 Quantization shrinks the model by 50% providing massive loading speed improvements
-# and better performance over WebGL networks.
-tfjs.converters.save_keras_model(model, output_dir, quantization_dtype_np="float16")
-print("[SUCCESS] Conversion complete! Model size has been highly optimized.")
+# ==============================
+# CREATE OUTPUT FOLDER
+# ==============================
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# ==============================
+# CONVERT MODEL
+# ==============================
+print("[INFO] Converting model to TensorFlow.js format...")
+tfjs.converters.save_keras_model(model, OUTPUT_DIR)
+
+# ==============================
+# SUCCESS
+# ==============================
+print("\n[SUCCESS] Model converted successfully! 🚀")
+print(f"📁 Output folder: {OUTPUT_DIR}")
+print("👉 Files generated:")
+print("   - model.json")
+print("   - group*.bin")
